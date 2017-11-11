@@ -51,6 +51,13 @@ class AI(BaseAI):
         """
         # <<-- Creer-Merge: runTurn -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         # Put your game logic here for runTurn
+        self.foods, self.materials = [], []
+        foods, materials = self.foods, self.materials
+        for i in game.tiles:
+            if i.food > 0:
+                foods.append(i)
+            if i.materials > 0:
+                materials.append(i)
         gathercount = 0
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             for i in self.player.units:
