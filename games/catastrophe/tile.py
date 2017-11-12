@@ -154,7 +154,11 @@ class Tile(GameObject):
             bool: True if pathable, False otherwise
         """
         # <<-- Creer-Merge: is_pathable_builtin -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
-        return self.unit == None and (self.structure == None or self.structure.type == "road" or self.structure.type == "shelter")
+        if self.unit or self.structure == None:
+            return True
+        elif self.structure == "shelter" or "road":
+            return True
+        return false  # DEVELOPER ADD LOGIC HERE
         # <<-- /Creer-Merge: is_pathable_builtin -->>
 
     def has_neighbor(self, tile):
