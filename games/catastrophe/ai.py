@@ -145,3 +145,7 @@ class AI(BaseAI):
         if unit.moves <= len(moves):
             for x in range(0, unit.moves):
                 unit.move(moves[x])
+            if unit.tile.has_neighbor(target):
+                return True
+            else:
+                return False
