@@ -292,7 +292,8 @@ class AI(BaseAI):
         moves = self.find_path(unit.tile, target)
         num_moves = len(moves) if unit.moves > len(moves) else unit.moves
         for x in range(0, num_moves):
-            unit.move(moves[x])
+            if moves[x] in unit.tile.get_neighbors() and not moves[x].unit:
+                unit.move(moves[x])
             if unit.tile.has_neighbor(target):
                 return True
         return False
