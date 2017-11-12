@@ -50,14 +50,9 @@ class AI(BaseAI):
             bool: Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.
         """
         if self.game.current_turn == 0 or self.game.current_turn == 1:
-            gathercount = 0
-            for i in self.player.units:
-                if i != self.player.cat:
-                    if gathercount != 2:
-                        i.change_job("gatherer")
-                        gathercount += 1
-                    else:
-                        i.change_job("missionary")
+            # self.base_start()
+            self.attack_start()
+            
         # All turns except first
         # Gathering
         for x in self.player.structures:
@@ -164,3 +159,18 @@ class AI(BaseAI):
             if unit.tile.has_neighbor(target):
                 return True
         return False
+
+    def base_start(self):
+        gathercount = 0
+        for i in self.player.units:
+            if i != self.player.cat:
+                if gathercount != 2:
+                    i.change_job("gatherer")
+                    gathercount += 1
+                else:
+                    i.change_job("missionary")
+
+    def attack_start(self):
+        for i in self.player.units:
+            if i != self.player.cat:
+                i.change_job("soldier")
