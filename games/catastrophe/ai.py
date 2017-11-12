@@ -63,11 +63,11 @@ class AI(BaseAI):
         # print(self.bushes)
         for g in gatherers:
             for f in self.bushes:
-                # print(type(g))
-                print(type(g.tile))
-                #sorted_foods[self.distance((g.movement_target.x,
-                #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
-                #print(sorted_foods)
+                sorted_foods[self.distance((g.tile.x, g.tile.y),
+                                           (f.x, f.y))] = f
+            sorted_foods_keys = sorted(sorted_foods.items())
+            if self.move_to_target(g, sorted_foods_keys[0]):
+                sorted_foods_keys.pop(0)
         return True
 
     def find_path(self, start, goal):
