@@ -2,6 +2,7 @@
 
 from joueur.base_ai import BaseAI
 
+
 class AI(BaseAI):
     """ The basic AI functions that are the same between games. """
 
@@ -18,19 +19,15 @@ class AI(BaseAI):
         """ This is called once the game starts and your AI knows its playerID and game. You can initialize your AI here.
         """
 
-
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are tracking anything you can update it here.
         """
-        
         self.foods, self.materials = [], []
-        foods, materials = self.foods, self.materials
-        for i in game.tiles:
+        for i in self.game.tiles:
             if i.food > 0:
-                foods.append(i)
+                self.foods.append(i)
             if i.materials > 0:
-                materials.append(i)
-
+                self.materials.append(i)
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and dump files here if need be.
