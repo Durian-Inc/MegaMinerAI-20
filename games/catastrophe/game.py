@@ -270,7 +270,7 @@ class Game(BaseGame):
             # out of bounds
             return None
 
-        return self.tiles[x + y * self.mapWidth]
+        return self.tiles[x + y * self.map_width]
 
     # <<-- Creer-Merge: functions -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
     # if you want to add any client side logic (such as state checking functions) this is where you can add them
