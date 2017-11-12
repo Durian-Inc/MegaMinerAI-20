@@ -108,7 +108,7 @@ class AI(BaseAI):
                     sorted_foods[self.distance((g.tile.x, g.tile.y),
                                                (f.x, f.y))] = f
                 sorted_foods_keys = sorted(sorted_foods.keys())
-                while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+                while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0 and count < len(sorted_foods_keys):
                     count += 1
                 if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
                     g.harvest(sorted_foods[sorted_foods_keys[count]])
@@ -118,17 +118,15 @@ class AI(BaseAI):
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
-            print(self.home)
             if s.energy <= 30 and self.home is not None:
                 if self.move_to_target(s, self.home.tile):
                     s.rest()
             else:
                 # defend
-                print(self.in_range(self.player.cat))
                 if self.in_range(self.player.cat) > 0:
                     if self.move_to_target(s, self.player.cat.tile):
                         self.target_close(s)
-                elif self.in_range(s) > 0 and dist2(s, enemy.cat):
+                elif self.in_range(s) > 0 and self.dist2(s, enemy.cat) >= 3:
                     self.target_close(s)
                 # attack
                 else:

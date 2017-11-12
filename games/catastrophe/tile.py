@@ -156,7 +156,9 @@ class Tile(GameObject):
         # <<-- Creer-Merge: is_pathable_builtin -->> - Code you add between this comment and the end comment will be preserved between Creer re-runs.
         if self.unit:
             return False
-        elif self.structure == "neutral" or self.structure == "wall" or self.structure == "monument":
+        elif self.structure and (self.structure.type == "neutral" or
+                                 self.structure.type == "wall" or
+                                 self.structure.type == "monument"):
             return False
         else:
             return True
