@@ -22,6 +22,8 @@ class AI(BaseAI):
         """ This is called once the game starts and your AI knows its playerID
         and game. You can initialize your AI here.
         """
+        self.food_quota = 100
+
         for x in self.player.structures:
             if x.type == "shelter":
                 self.home = x
@@ -80,8 +82,7 @@ class AI(BaseAI):
             # self.attack_start()
             
         # All turns except first
-        # Gathering
-        
+        # Gatherers 
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
         count = 0
@@ -89,25 +90,33 @@ class AI(BaseAI):
             if g.food:
                 if self.move_to_target(g, self.home.tile):
                     g.drop(self.home.tile, "food", g.food)
-                continue
-            if g.energy < g.job.action_cost:
-                g.rest()
-            for f in self.bushes:
-                sorted_foods[self.distance((g.tile.x, g.tile.y),
-                                           (f.x, f.y))] = f
-            sorted_foods_keys = sorted(sorted_foods.keys())
-            while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+            elif g.energy < g.job.action_cost:
+                if self.move_to_target(g, self.home.tile):
+                    g.rest()
+            elif self.player.food >= self.food_quota:
+                if self.move_to_target(g, self.home.tile):
+                    g.change_job("builder")
+            else:
+                for f in self.bushes:
+                    sorted_foods[self.distance((g.tile.x, g.tile.y),
+                                               (f.x, f.y))] = f
+                sorted_foods_keys = sorted(sorted_foods.keys())
+                while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+                    count += 1
+                if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
+                    g.harvest(sorted_foods[sorted_foods_keys[count]])
                 count += 1
-            if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
-                g.harvest(sorted_foods[sorted_foods_keys[count]])
-            count += 1
 
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
-            # optimize
-            if self.move_to_target(s, enemy.cat.tile):
-                s.attack(enemy.cat.tile)
+            if s.energy > 30:
+                # attack
+                if self.move_to_target(s, enemy.cat.tile):
+                    s.attack(enemy.cat.tile)
+            else:
+                if self.move_to_target(g, self.home.tile):
+                    s.rest()
 
         # Missionaries
         missionaries = self.get_unit_type(self.player.units, "missionary")
