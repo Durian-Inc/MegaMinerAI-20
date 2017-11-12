@@ -138,6 +138,19 @@ class AI(BaseAI):
                         m_1.rest()
                 else:
                     self.move_to_target(m_1, self.m_target)
+                #sorted_foods[self.distance((g.movement_target.x,
+                #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
+                #print(sorted_foods)
+                pass
+
+        enemy = None
+        for person in self.game.players:
+            if person != self.player:
+                enemy = person
+        for unit in self.game.units:
+            if unit.owner == self.player:
+                if unit.moves > 0 and unit != self.player.cat:
+                    self.move_to_target(unit, enemy.cat.tile)
 
         return True
 
