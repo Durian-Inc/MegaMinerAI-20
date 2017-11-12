@@ -113,7 +113,6 @@ class AI(BaseAI):
             if s.energy > 30:
                 # attack
                 if self.move_to_target(s, enemy.cat.tile):
-                    print(str(s))
                     s.log("I'm moveing")
                     s.attack(enemy.cat.tile)
             else:
