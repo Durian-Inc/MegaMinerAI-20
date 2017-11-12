@@ -121,7 +121,7 @@ class AI(BaseAI):
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
             if s.energy <= 30 and self.home is not None:
-                if self.move_to_target(s, self.home.tile):
+                if self.move_to_target(s, self.home):
                     s.rest()
             else:
                 # defend
