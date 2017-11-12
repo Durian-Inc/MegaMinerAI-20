@@ -22,7 +22,7 @@ class AI(BaseAI):
         """ This is called once the game starts and your AI knows its playerID
         and game. You can initialize your AI here.
         """
-        self.food_quota = 100
+        self.food_quota = 250
 
         for x in self.player.structures:
             if x.type == "shelter":
@@ -78,7 +78,7 @@ class AI(BaseAI):
             function.
         """
         if self.game.current_turn == 0 or self.game.current_turn == 1:
-            self.base_start()
+            self.base_start(len(self.bushes))
             # self.attack_start()
             
         # All turns except first
@@ -93,9 +93,9 @@ class AI(BaseAI):
             elif g.energy < g.job.action_cost:
                 if self.move_to_target(g, self.home.tile):
                     g.rest()
-            elif self.player.food >= self.food_quota:
-                if self.move_to_target(g, self.home.tile):
-                    g.change_job("builder")
+            # elif self.player.food >= self.food_quota:
+            #     if self.move_to_target(g, self.home.tile):
+            #         g.change_job("builder")
             else:
                 for f in self.bushes:
                     sorted_foods[self.distance((g.tile.x, g.tile.y),
@@ -107,16 +107,24 @@ class AI(BaseAI):
                     g.harvest(sorted_foods[sorted_foods_keys[count]])
                 count += 1
 
+        # Soldiers
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
-            if s.energy > 30:
-                # attack
-                if self.move_to_target(s, enemy.cat.tile):
-                    s.attack(enemy.cat.tile)
-            else:
-                if self.move_to_target(g, self.home.tile):
+            if s.energy <= 30:
+                if self.move_to_target(s, self.home.tile):
                     s.rest()
+            else:
+                # defend
+                print(self.in_range(self.player.cat) > 0)
+                if self.in_range(self.player.cat) > 0:
+                    if self.move_to_target(s, self.player.cat.tile):
+                        self.target_close(s)
+                        self.move_to_target(s, self.player.cat.tile)
+                # attack
+                else:
+                    if self.move_to_target(s, enemy.cat.tile):
+                        s.attack(enemy.cat.tile)
 
         # Missionaries
         missionaries = self.get_unit_type(self.player.units, "missionary")
@@ -144,10 +152,7 @@ class AI(BaseAI):
                         m_1.rest()
                 else:
                     self.move_to_target(m_1, self.m_target)
-                #sorted_foods[self.distance((g.movement_target.x,
-                #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
-                #print(sorted_foods)
-                pass
+
         elif len(missionaries) > 1:
             m_1 = missionaries[0]  # first missionary
             if m_1.energy < m_1.job.action_cost:
@@ -195,24 +200,17 @@ class AI(BaseAI):
                     self.move_to_target(m_2, self.m2_target)
 
         # New humans
+        # builder_quota = 0
         new_humans = self.get_unit_type(self.player.units, "fresh human")
         if len(new_humans) > 0:
             for human in new_humans:
-                self.move_to_target(human, self.player.cat.tile)
-                if human.tile.has_neighbor(self.player.cat.tile):
+                if self.move_to_target(human, self.player.cat.tile):
                     if len(missionaries) < 2:
                         human.change_job("missionary")
+                    # elif len(self.get_unit_type(self.player.units, "builder")) != builder_quota:
+                    #     human.change_job("builder")
                     else:
                         human.change_job("soldier")
-
-        enemy = None
-        for person in self.game.players:
-            if person != self.player:
-                enemy = person
-        for unit in self.game.units:
-            if unit.owner == self.player:
-                if unit.moves > 0 and unit != self.player.cat:
-                    self.move_to_target(unit, enemy.cat.tile)
 
         return True
 
@@ -299,11 +297,15 @@ class AI(BaseAI):
                 return True
         return False
 
-    def base_start(self):
+    def base_start(self, num_bushes):
+        if num_bushes > 7:
+            gather_quota = 2
+        else:
+            gather_quota = 1
         gathercount = 0
         for i in self.player.units:
             if i != self.player.cat:
-                if gathercount != 2:
+                if gathercount != gather_quota:
                     i.change_job("gatherer")
                     gathercount += 1
                 else:
@@ -313,3 +315,40 @@ class AI(BaseAI):
         for i in self.player.units:
             if i != self.player.cat:
                 i.change_job("soldier")
+
+    def in_range(self, unit):
+        squares = set()
+        enemies = 0
+        for x in unit.tile.get_neighbors():
+            squares.add(x)
+            for y in x.get_neighbors():
+                squares.add(y)
+        for i in squares:
+            if i.unit and i.unit.owner != self.player:
+                enemies += 1
+        return enemies
+
+    def target_close(self, fighter):
+        squares = set()
+        enemies = set()
+        whatevers = set()
+        sorted_enemies = {}
+        for x in fighter.tile.get_neighbors():
+            squares.add(x)
+            for y in x.get_neighbors():
+                squares.add(y)
+        for i in squares:
+            if i.unit and i.unit.owner != self.player:
+                if i.unit.job.title == "soldier":
+                    enemies.add(i.unit)
+                else:
+                    whatevers.add(i.unit)
+
+        for i in enemies:
+            sorted_enemies[self.distance((i.tile.x, i.tile.y),
+                                         (fighter.tile.x, fighter.tile.y))] = i
+            sorted_enemies_keys = sorted(sorted_enemies.keys())
+            sorted_enemies[sorted_enemies_keys[0]].log("moving here")
+            if self.move_to_target(i, sorted_enemies[sorted_enemies_keys[0]].tile):
+                i.attack(sorted_enemies[sorted_enemies_keys[0]].tile)
+                i.log("I am attacking")
