@@ -85,10 +85,10 @@ class AI(BaseAI):
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             self.base_start()
             # self.attack_start()
-        
+
         builders = self.get_unit_type(self.player.units, "builder")
         # All turns except first
-        # Gatherers 
+        # Gatherers
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
         count = 0
@@ -99,9 +99,9 @@ class AI(BaseAI):
             elif g.energy < g.job.action_cost:
                 if self.move_to_target(g, self.home.tile):
                     g.rest()
-            elif self.player.food >= self.food_quota:
-                if self.move_to_target(g, self.home.tile):
-                    g.change_job("builder")
+            # elif self.player.food >= self.food_quota:
+            #     if self.move_to_target(g, self.home.tile):
+            #         g.change_job("builder")
             else:
                 for f in self.bushes:
                     sorted_foods[self.distance((g.tile.x, g.tile.y),
@@ -180,8 +180,7 @@ class AI(BaseAI):
                 # check energy
                 if missionary.energy < missionary.job.action_cost:
                     # go to cat and rest
-                    self.move_to_target(missionary, self.player.cat.tile)
-                    if missionary.tile.has_neighbor(self.player.cat.tile):
+                    if self.move_to_target(missionary, self.player.cat.tile):
                         missionary.rest()
                 else:
                     # we have enough energy, search for humans
