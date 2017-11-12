@@ -29,9 +29,10 @@ class AI(BaseAI):
             if i.materials > 0:
                 self.materials.append(i)
             if i.harvest_rate > 0:
-                self.bushes.append(i)
-            if i.structure is not None and i.structure.owner is not None:
-                self.materialStructures.append(i)
+                if i.structure is None:
+                    self.bushes.append(i)
+                else:
+                    self.materialStructures.append(i)
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and dump files here if need be.
