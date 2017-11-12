@@ -22,6 +22,12 @@ class AI(BaseAI):
         """ This is called once the game starts and your AI knows its playerID
         and game. You can initialize your AI here.
         """
+        # find which missionary position is closer to start
+        start_loc = (self.player.cat.tile.x, self.player.cat.tile.y)
+        self.m_target = self.game.get_tile_at(0, 7)
+        if(self.distance(start_loc, (self.m_target.x, self.m_target.y)) >
+           self.distance(start_loc, (25, 10))):
+            self.m_target = self.game.get_tile_at(25, 10)
 
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are
@@ -63,6 +69,9 @@ class AI(BaseAI):
             turn, False means to keep your turn going and re-call this
             function.
         """
+
+        print(self.game.current_turn)
+
         gathercount = 0
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             for i in self.player.units:
@@ -88,18 +97,12 @@ class AI(BaseAI):
             for f in self.bushes:
                 sorted_foods[self.distance((g.tile.x, g.tile.y),
                                            (f.x, f.y))] = f
-<<<<<<< HEAD
-            # sorted_foods_keys = sorted(sorted_foods.items())
-            # if self.move_to_target(g, sorted_foods[sorted_foods_keys[0]]):
-            #    sorted_foods_keys.pop(0)
-=======
             sorted_foods_keys = sorted(sorted_foods.keys())
             while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
                 count += 1
             if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
                 g.harvest(sorted_foods[sorted_foods_keys[count]])
             count += 1
->>>>>>> fc79a72fb124e47c286f6b2e5ef062527c44a604
 
         # enemy = None
         # for person in self.game.players:
@@ -114,10 +117,27 @@ class AI(BaseAI):
         # only one missionary
         if len(missionaries) == 1:
             m_1 = missionaries[0]  # the one and only
-            path = self.find_path(m_1.tile, self.game.get_tile_at(0, 7))
-            while m_1.moves > 0 and len(path) > 0:
-                m_1.move(path[0])
-                del path[0]
+            if m_1.energy < m_1.job.action_cost:
+                self.move_to_target(m_1, self.player.cat.tile)
+                if m_1.tile.has_neighbor(self.player.cat.tile):
+                    m_1.rest()
+            else:
+                if len(self.unowned_humans) > 0:
+                    target_human = None
+                    for human in self.unowned_humans:
+                        if target_human is None:
+                            target_human = human
+                        if self.distance((m_1.tile.x, m_1.tile.y),
+                                         (human.tile.x, human.tile.y)) < self.distance((m_1.tile.x, m_1.tile.y), (human.tile.x, human.tile.y)):
+                            target_human = human
+
+                    self.move_to_target(m_1, target_human.tile)
+                    if m_1.tile.has_neighbor(target_human.tile):
+                        m_1.convert(target_human.tile)
+                    if m_1.energy < m_1.job.action_cost:
+                        m_1.rest()
+                else:
+                    self.move_to_target(m_1, self.m_target)
 
         return True
 
