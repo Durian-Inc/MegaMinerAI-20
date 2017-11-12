@@ -71,6 +71,8 @@ class AI(BaseAI):
                 self.move_to_target(g, home.tile)
                 g.drop(home.tile, "food", g.food)
                 continue
+            if g.energy < g.job.action_cost:
+                g.rest()
             for f in self.bushes:
                 sorted_foods[self.distance((g.tile.x, g.tile.y),
                                            (f.x, f.y))] = f
