@@ -49,8 +49,8 @@ class AI(BaseAI):
         Returns:
             bool: Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.
         """
-        gathercount = 0
         if self.game.current_turn == 0 or self.game.current_turn == 1:
+            gathercount = 0
             for i in self.player.units:
                 if i != self.player.cat:
                     if gathercount != 2:
@@ -68,8 +68,8 @@ class AI(BaseAI):
         count = 0
         for g in gatherers:
             if g.food:
-                self.move_to_target(g, home.tile)
-                g.drop(home.tile, "food", g.food)
+                if self.move_to_target(g, home.tile):
+                    g.drop(home.tile, "food", g.food)
                 continue
             if g.energy < g.job.action_cost:
                 g.rest()
