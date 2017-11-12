@@ -113,9 +113,11 @@ class AI(BaseAI):
             if s.energy > 30:
                 # attack
                 if self.move_to_target(s, enemy.cat.tile):
+                    print(str(s))
+                    s.log("I'm moveing")
                     s.attack(enemy.cat.tile)
             else:
-                if self.move_to_target(g, self.home.tile):
+                if self.move_to_target(s, self.home.tile):
                     s.rest()
 
         # Missionaries
@@ -204,16 +206,6 @@ class AI(BaseAI):
                         human.change_job("missionary")
                     else:
                         human.change_job("soldier")
-
-        enemy = None
-        for person in self.game.players:
-            if person != self.player:
-                enemy = person
-        for unit in self.game.units:
-            if unit.owner == self.player:
-                if unit.moves > 0 and unit != self.player.cat:
-                    self.move_to_target(unit, enemy.cat.tile)
-
         return True
 
     def find_path(self, start, goal):
@@ -294,7 +286,8 @@ class AI(BaseAI):
         moves = self.find_path(unit.tile, target)
         num_moves = len(moves) if unit.moves > len(moves) else unit.moves
         for x in range(0, num_moves):
-            unit.move(moves[x])
+            if moves[x] in unit.tile.get_neighbors() and not moves[x].unit:
+                unit.move(moves[x])
             if unit.tile.has_neighbor(target):
                 return True
         return False
