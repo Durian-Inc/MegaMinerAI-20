@@ -22,6 +22,8 @@ class AI(BaseAI):
         """ This is called once the game starts and your AI knows its playerID
         and game. You can initialize your AI here.
         """
+        self.food_quota = 100
+
         for x in self.player.structures:
             if x.type == "shelter":
                 self.home = x
@@ -86,8 +88,7 @@ class AI(BaseAI):
         
         builders = self.get_unit_type(self.player.units, "builder")
         # All turns except first
-        # Gathering
-        
+        # Gatherers 
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
         count = 0
@@ -95,25 +96,34 @@ class AI(BaseAI):
             if g.food:
                 if self.move_to_target(g, self.home.tile):
                     g.drop(self.home.tile, "food", g.food)
-                continue
-            if g.energy < g.job.action_cost:
-                g.rest()
-            for f in self.bushes:
-                sorted_foods[self.distance((g.tile.x, g.tile.y),
-                                           (f.x, f.y))] = f
-            sorted_foods_keys = sorted(sorted_foods.keys())
-            while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+            elif g.energy < g.job.action_cost:
+                if self.move_to_target(g, self.home.tile):
+                    g.rest()
+            elif self.player.food >= self.food_quota:
+                if self.move_to_target(g, self.home.tile):
+                    g.change_job("builder")
+            else:
+                for f in self.bushes:
+                    sorted_foods[self.distance((g.tile.x, g.tile.y),
+                                               (f.x, f.y))] = f
+                sorted_foods_keys = sorted(sorted_foods.keys())
+                while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+                    count += 1
+                if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
+                    g.harvest(sorted_foods[sorted_foods_keys[count]])
                 count += 1
-            if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
-                g.harvest(sorted_foods[sorted_foods_keys[count]])
-            count += 1
 
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
-            # optimize
-            if self.move_to_target(s, enemy.cat.tile):
-                s.attack(enemy.cat.tile)
+            if s.energy > 30:
+                # attack
+                if self.move_to_target(s, enemy.cat.tile):
+                    s.log("I'm moveing")
+                    s.attack(enemy.cat.tile)
+            else:
+                if self.move_to_target(s, self.home.tile):
+                    s.rest()
 
         # Missionaries
         missionaries = self.get_unit_type(self.player.units, "missionary")
@@ -235,16 +245,6 @@ class AI(BaseAI):
                         human.change_job("missionary")
                     else:
                         human.change_job("soldier")
-
-        enemy = None
-        for person in self.game.players:
-            if person != self.player:
-                enemy = person
-        for unit in self.game.units:
-            if unit.owner == self.player:
-                if unit.moves > 0 and unit != self.player.cat:
-                    self.move_to_target(unit, enemy.cat.tile)
-
         return True
 
     def find_path(self, start, goal):
@@ -297,7 +297,7 @@ class AI(BaseAI):
 
                 # if the tile exists, has not been explored or added to the
                 # fringe yet, and it is pathable
-                if (neighbor and 
+                if (neighbor and
                    neighbor.id not in came_from and
                    neighbor.is_pathable()):
                     # add it to the tiles to be explored and add where it came
@@ -329,7 +329,8 @@ class AI(BaseAI):
         moves = self.find_path(unit.tile, target)
         num_moves = len(moves) if unit.moves > len(moves) else unit.moves
         for x in range(0, num_moves):
-            unit.move(moves[x])
+            if moves[x] in unit.tile.get_neighbors() and not moves[x].unit:
+                unit.move(moves[x])
             if unit.tile.has_neighbor(target):
                 return True
         return False
