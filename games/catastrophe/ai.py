@@ -27,19 +27,19 @@ class AI(BaseAI):
             tracking anything you can update it here.
         """
         # set up and refresh lists
-        self.foods, self.materials,
-        self.bushes, self.material_structures = [], [], [], []
-        for i in self.game.tiles:
-            if i.food > 0:
-                self.foods.append(i)
-            elif i.materials > 0:
-                self.materials.append(i)
-            elif i.harvest_rate > 0:
-                self.bushes.append(i)
-            elif (i.structure is not None and
-                  i.structure.owner is None and
-                  i.structure.type != 'road'):
-                self.material_structures.append(i)
+        self.foods, self.materials, self.unused_humans,
+        self.bushes, self.material_structures = [], [], [], [], []
+        for tile in self.game.tiles:
+            if tile.food > 0:
+                self.foods.append(tile)
+            elif tile.materials > 0:
+                self.materials.append(tile)
+            elif tile.harvest_rate > 0:
+                self.bushes.append(tile)
+            elif (tile.structure is not None and
+                  tile.structure.owner is None and
+                  tile.structure.type != 'road'):
+                self.material_structures.append(tile)
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and
