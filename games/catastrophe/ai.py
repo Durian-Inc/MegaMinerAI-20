@@ -66,6 +66,7 @@ class AI(BaseAI):
                 #sorted_foods[self.distance((g.movement_target.x,
                 #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
                 #print(sorted_foods)
+                pass
 
         enemy = None
         for person in self.game.players:
@@ -141,7 +142,7 @@ class AI(BaseAI):
         return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
 
     def move_to_target(self, unit, target):
-        moves = self.find_path(unit, target)
+        moves = self.find_path(unit.tile, target)
         if unit.moves <= len(moves):
             for x in range(0, unit.moves):
                 unit.move(moves[x])
