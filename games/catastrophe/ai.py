@@ -8,7 +8,8 @@ class AI(BaseAI):
     """ The basic AI functions that are the same between games. """
 
     def get_name(self):
-        """ This is the name you send to the server so your AI will control the player named this string.
+        """ This is the name you send to the server so your AI will control
+            the player named this string.
 
         Returns
             str: The name of your Player.
@@ -17,13 +18,17 @@ class AI(BaseAI):
         return "Durian"
 
     def start(self):
-        """ This is called once the game starts and your AI knows its playerID and game. You can initialize your AI here.
+        """ This is called once the game starts and your AI knows its playerID
+        and game. You can initialize your AI here.
         """
 
     def game_updated(self):
-        """ This is called every time the game's state updates, so if you are tracking anything you can update it here.
+        """ This is called every time the game's state updates, so if you are
+            tracking anything you can update it here.
         """
-        self.foods, self.materials, self.bushes, self.material_structures = [], [], [], []
+        # set up and refresh lists
+        self.foods, self.materials,
+        self.bushes, self.material_structures = [], [], [], []
         for i in self.game.tiles:
             if i.food > 0:
                 self.foods.append(i)
@@ -31,22 +36,28 @@ class AI(BaseAI):
                 self.materials.append(i)
             elif i.harvest_rate > 0:
                 self.bushes.append(i)
-            elif i.structure is not None and i.structure.owner is None and i.structure.type != 'road':
+            elif (i.structure is not None and
+                  i.structure.owner is None and
+                  i.structure.type != 'road'):
                 self.material_structures.append(i)
 
     def end(self, won, reason):
-        """ This is called when the game ends, you can clean up your data and dump files here if need be.
+        """ This is called when the game ends, you can clean up your data and
+            dump files here if need be.
 
         Args:
             won (bool): True means you won, False means you lost.
-            reason (str): The human readable string explaining why you won or lost.
+            reason (str): The human readable string explaining why you won or
+            lost.
         """
 
     def run_turn(self):
         """ This is called every time it is this AI.player's turn.
 
         Returns:
-            bool: Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.
+            bool: Represents if you want to end your turn. True means end your
+            turn, False means to keep your turn going and re-call this
+            function.
         """
         gathercount = 0
         if self.game.current_turn == 0 or self.game.current_turn == 1:
@@ -64,8 +75,8 @@ class AI(BaseAI):
             for f in self.bushes:
                 sorted_foods[self.distance((g.tile.x, g.tile.y),
                                            (f.x, f.y))] = f
-            sorted_foods_keys = sorted(sorted_foods.items())
-            #if self.move_to_target(g, sorted_foods[sorted_foods_keys[0]]):
+            # sorted_foods_keys = sorted(sorted_foods.items())
+            # if self.move_to_target(g, sorted_foods[sorted_foods_keys[0]]):
             #    sorted_foods_keys.pop(0)
 
         # enemy = None
@@ -80,12 +91,16 @@ class AI(BaseAI):
         return True
 
     def find_path(self, start, goal):
-        """A very basic path finding algorithm (Breadth First Search) that when given a starting Tile, will return a valid path to the goal Tile.
+        """ A very basic path finding algorithm (Breadth First Search) that
+            when given a starting Tile, will return a valid path to the goal
+            Tile.
         Args:
             start (Tile): the starting Tile
             goal (Tile): the goal Tile
         Returns:
-            list[Tile]: A list of Tiles representing the path, the the first element being a valid adjacent Tile to the start, and the last element being the goal.
+            list[Tile]: A list of Tiles representing the path, the the first
+            element being a valid adjacent Tile to the start, and the last
+            element being the goal.
         """
 
         if start == goal:
@@ -110,23 +125,31 @@ class AI(BaseAI):
             for neighbor in inspect.get_neighbors():
                 # if we found the goal, we have the path!
                 if neighbor == goal:
-                    # Follow the path backward to the start from the goal and return it.
+                    # Follow the path backward to the start from the goal and
+                    # return it.
                     path = [goal]
 
-                    # Starting at the tile we are currently at, insert them retracing our steps till we get to the starting tile
+                    # Starting at the tile we are currently at, insert them
+                    # retracing our steps till we get to the starting tile
                     while inspect != start:
                         path.insert(0, inspect)
                         inspect = came_from[inspect.id]
                     return path
-                # else we did not find the goal, so enqueue this tile's neighbors to be inspected
+                # else we did not find the goal, so enqueue this tile's
+                # neighbors to be inspected
 
-                # if the tile exists, has not been explored or added to the fringe yet, and it is pathable
-                if neighbor and neighbor.id not in came_from and neighbor.is_pathable():
-                    # add it to the tiles to be explored and add where it came from for path reconstruction.
+                # if the tile exists, has not been explored or added to the
+                # fringe yet, and it is pathable
+                if (neighbor and 
+                   neighbor.id not in came_from and
+                   neighbor.is_pathable()):
+                    # add it to the tiles to be explored and add where it came
+                    # from for path reconstruction.
                     fringe.append(neighbor)
                     came_from[neighbor.id] = inspect
 
-        # if you're here, that means that there was not a path to get to where you want to go.
+        # if you're here, that means that there was not a path to get to where
+        # you want to go.
         #   in that case, we'll just return an empty path.
         return []
 
