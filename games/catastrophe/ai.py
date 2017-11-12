@@ -91,6 +91,15 @@ class AI(BaseAI):
         #         if unit.moves > 0 and unit != self.player.cat:
         #             self.move_to_target(unit, enemy.cat.tile)
 
+        missionaries = self.get_unit_type(self.player.units, "missionary")
+        # only one missionary
+        if len(missionaries) == 1:
+            m_1 = missionaries[0]  # the one and only
+            path = self.find_path(m_1.tile, self.game.get_tile_at(0, 7))
+            while m_1.moves > 0 and len(path) > 0:
+                m_1.move(path[0])
+                del path[0]
+
         return True
 
     def find_path(self, start, goal):
