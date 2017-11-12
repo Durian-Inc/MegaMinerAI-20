@@ -83,16 +83,11 @@ class AI(BaseAI):
             function.
         """
         if self.game.current_turn == 0 or self.game.current_turn == 1:
-<<<<<<< HEAD
             self.base_start(len(self.bushes))
             # self.attack_start()
             
-=======
-            self.base_start()
-            # self.attack_start()
 
         builders = self.get_unit_type(self.player.units, "builder")
->>>>>>> e1b4a91157c75d07aaaccb3f70a981ffbe588dbf
         # All turns except first
         # Gatherers
         gatherers = self.get_unit_type(self.player.units, "gatherer")
