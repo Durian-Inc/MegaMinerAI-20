@@ -27,11 +27,11 @@ class AI(BaseAI):
         for i in self.game.tiles:
             if i.food > 0:
                 self.foods.append(i)
-            if i.materials > 0:
+            elif i.materials > 0:
                 self.materials.append(i)
-            if i.harvest_rate > 0:
+            elif i.harvest_rate > 0:
                 self.bushes.append(i)
-            if i.structure is not None and i.structure.owner is not None:
+            elif i.structure is not None and i.structure.owner is None and i.structure.type != 'road':
                 self.material_structures.append(i)
 
     def end(self, won, reason):
@@ -64,10 +64,10 @@ class AI(BaseAI):
         for g in gatherers:
             for f in self.bushes:
                 # print(type(g))
-                print(type(g.tile))
-                #sorted_foods[self.distance((g.movement_target.x,
+                # print(type(g.tile))
+                # sorted_foods[self.distance((g.movement_target.x,
                 #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
-                #print(sorted_foods)
+                # print(sorted_foods)
         return True
 
     def find_path(self, start, goal):
