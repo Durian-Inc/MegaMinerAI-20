@@ -20,7 +20,9 @@ class AI(BaseAI):
     def start(self):
         """ This is called once the game starts and your AI knows its playerID and game. You can initialize your AI here.
         """
-
+        for x in self.player.structures:
+            if x.type == "shelter":
+                self.home = x
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are tracking anything you can update it here.
         """
@@ -55,16 +57,14 @@ class AI(BaseAI):
             
         # All turns except first
         # Gathering
-        for x in self.player.structures:
-            if x.type == "shelter":
-                home = x
+        
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
         count = 0
         for g in gatherers:
             if g.food:
-                if self.move_to_target(g, home.tile):
-                    g.drop(home.tile, "food", g.food)
+                if self.move_to_target(g, self.home.tile):
+                    g.drop(self.home.tile, "food", g.food)
                 continue
             if g.energy < g.job.action_cost:
                 g.rest()
@@ -78,14 +78,12 @@ class AI(BaseAI):
                 g.harvest(sorted_foods[sorted_foods_keys[count]])
             count += 1
 
-        # enemy = None
-        # for person in self.game.players:
-        #     if person != self.player:
-        #         enemy = person
-        # for unit in self.game.units:
-        #     if unit.owner == self.player:
-        #         if unit.moves > 0 and unit != self.player.cat:
-        #             self.move_to_target(unit, enemy.cat.tile)
+        enemy = self.player.opponent
+        soldiers = self.get_unit_type(self.player.units, "soldier")
+        for s in soldiers:
+            # optimize
+            if self.move_to_target(s, enemy.cat.tile):
+                s.attack(enemy.cat.tile)
 
         return True
 

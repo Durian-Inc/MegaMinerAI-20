@@ -160,6 +160,7 @@ class Tile(GameObject):
             return True
         elif self.structure == "shelter" or self.structure == "road":
             return True
+        return True
         # <<-- /Creer-Merge: is_pathable_builtin -->>
 
     def has_neighbor(self, tile):
