@@ -27,8 +27,8 @@ class AI(BaseAI):
             tracking anything you can update it here.
         """
         # set up and refresh lists
-        self.foods, self.materials, self.unused_humans,
-        self.bushes, self.material_structures = [], [], [], [], []
+        self.foods, self.materials, self.unused_humans = [], [], []
+        self.bushes, self.material_structures = [], []
         for tile in self.game.tiles:
             if tile.food > 0:
                 self.foods.append(tile)
