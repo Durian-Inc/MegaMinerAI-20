@@ -28,10 +28,12 @@ class AI(BaseAI):
 
         # find which missionary position is closer to start
         start_loc = (self.player.cat.tile.x, self.player.cat.tile.y)
-        self.m_target = self.game.get_tile_at(0, 7)
+        self.m_target = self.game.get_tile_at(0, 10)
+        self.m2_target = self.game.get_tile_at(25, 10)
         if(self.distance(start_loc, (self.m_target.x, self.m_target.y)) >
            self.distance(start_loc, (25, 10))):
-            self.m_target = self.game.get_tile_at(25, 10)
+            self.m_target = self.game.get_tile_at(25, 7)
+            self.m2_target = self.game.get_tile_at(0, 7)
 
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are
@@ -107,6 +109,7 @@ class AI(BaseAI):
             if self.move_to_target(s, enemy.cat.tile):
                 s.attack(enemy.cat.tile)
 
+        # Missionaries
         missionaries = self.get_unit_type(self.player.units, "missionary")
         # only one missionary
         if len(missionaries) == 1:
@@ -136,6 +139,62 @@ class AI(BaseAI):
                 #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
                 #print(sorted_foods)
                 pass
+        elif len(missionaries) > 1:
+            m_1 = missionaries[0]  # first missionary
+            if m_1.energy < m_1.job.action_cost:
+                self.move_to_target(m_1, self.player.cat.tile)
+                if m_1.tile.has_neighbor(self.player.cat.tile):
+                    m_1.rest()
+            else:
+                if len(self.unowned_humans) > 0:
+                    target_human = None
+                    for human in self.unowned_humans:
+                        if target_human is None:
+                            target_human = human
+                        if self.distance((m_1.tile.x, m_1.tile.y),
+                                         (human.tile.x, human.tile.y)) < self.distance((m_1.tile.x, m_1.tile.y), (human.tile.x, human.tile.y)):
+                            target_human = human
+
+                    self.move_to_target(m_1, target_human.tile)
+                    if m_1.tile.has_neighbor(target_human.tile):
+                        m_1.convert(target_human.tile)
+                    if m_1.energy < m_1.job.action_cost:
+                        m_1.rest()
+                else:
+                    self.move_to_target(m_1, self.m_target)
+            m_2 = missionaries[1]  # second missionary
+            if m_2.energy < m_2.job.action_cost:
+                self.move_to_target(m_2, self.player.cat.tile)
+                if m_2.tile.has_neighbor(self.player.cat.tile):
+                    m_2.rest()
+            else:
+                if len(self.unowned_humans) > 0:
+                    target_human = None
+                    for human in self.unowned_humans:
+                        if target_human is None:
+                            target_human = human
+                        if self.distance((m_2.tile.x, m_2.tile.y),
+                                         (human.tile.x, human.tile.y)) < self.distance((m_2.tile.x, m_2.tile.y), (human.tile.x, human.tile.y)):
+                            target_human = human
+
+                    self.move_to_target(m_2, target_human.tile)
+                    if m_2.tile.has_neighbor(target_human.tile):
+                        m_2.convert(target_human.tile)
+                    if m_2.energy < m_2.job.action_cost:
+                        m_2.rest()
+                else:
+                    self.move_to_target(m_2, self.m2_target)
+
+        # New humans
+        new_humans = self.get_unit_type(self.player.units, "fresh human")
+        if len(new_humans) > 0:
+            for human in new_humans:
+                self.move_to_target(human, self.player.cat.tile)
+                if human.tile.has_neighbor(self.player.cat.tile):
+                    if len(missionaries) < 2:
+                        human.change_job("missionary")
+                    else:
+                        human.change_job("soldier")
 
         enemy = None
         for person in self.game.players:
