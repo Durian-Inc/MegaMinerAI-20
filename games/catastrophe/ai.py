@@ -111,16 +111,18 @@ class AI(BaseAI):
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
         for s in soldiers:
-            if s.energy <= 30:
+            print(self.home)
+            if s.energy <= 30 and self.home is not None:
                 if self.move_to_target(s, self.home.tile):
                     s.rest()
             else:
                 # defend
-                print(self.in_range(self.player.cat) > 0)
+                print(self.in_range(self.player.cat))
                 if self.in_range(self.player.cat) > 0:
                     if self.move_to_target(s, self.player.cat.tile):
                         self.target_close(s)
-                        self.move_to_target(s, self.player.cat.tile)
+                elif self.in_range(s) > 0 and distance2(s, enemy.cat):
+                    self.target_close(s)
                 # attack
                 else:
                     if self.move_to_target(s, enemy.cat.tile):
@@ -299,10 +301,7 @@ class AI(BaseAI):
         return False
 
     def base_start(self, num_bushes):
-        if num_bushes > 7:
-            gather_quota = 2
-        else:
-            gather_quota = 1
+        gather_quota = 1
         gathercount = 0
         for i in self.player.units:
             if i != self.player.cat:
@@ -324,6 +323,8 @@ class AI(BaseAI):
             squares.add(x)
             for y in x.get_neighbors():
                 squares.add(y)
+                for z in y.get_neighbors():
+                    squares.add(z)
         for i in squares:
             if i.unit and i.unit.owner != self.player:
                 enemies += 1
@@ -338,6 +339,9 @@ class AI(BaseAI):
             squares.add(x)
             for y in x.get_neighbors():
                 squares.add(y)
+                for z in y.get_neighbors():
+                    squares.add(z)
+
         for i in squares:
             if i.unit and i.unit.owner != self.player:
                 if i.unit.job.title == "soldier":
@@ -348,8 +352,8 @@ class AI(BaseAI):
         for i in enemies:
             sorted_enemies[self.distance((i.tile.x, i.tile.y),
                                          (fighter.tile.x, fighter.tile.y))] = i
-            sorted_enemies_keys = sorted(sorted_enemies.keys())
-            sorted_enemies[sorted_enemies_keys[0]].log("moving here")
-            if self.move_to_target(i, sorted_enemies[sorted_enemies_keys[0]].tile):
-                i.attack(sorted_enemies[sorted_enemies_keys[0]].tile)
-                i.log("I am attacking")
+
+        sorted_enemies_keys = sorted(sorted_enemies.keys())
+        if sorted_enemies_keys:
+            if self.move_to_target(fighter, sorted_enemies[sorted_enemies_keys[0]].tile):
+                fighter.attack(sorted_enemies[sorted_enemies_keys[0]].tile)
