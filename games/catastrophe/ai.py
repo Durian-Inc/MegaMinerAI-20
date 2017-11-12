@@ -60,14 +60,23 @@ class AI(BaseAI):
         # All turns except first
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
-        # print(self.bushes)
         for g in gatherers:
             for f in self.bushes:
                 sorted_foods[self.distance((g.tile.x, g.tile.y),
                                            (f.x, f.y))] = f
             sorted_foods_keys = sorted(sorted_foods.items())
-            if self.move_to_target(g, sorted_foods_keys[0]):
-                sorted_foods_keys.pop(0)
+            #if self.move_to_target(g, sorted_foods[sorted_foods_keys[0]]):
+            #    sorted_foods_keys.pop(0)
+
+        # enemy = None
+        # for person in self.game.players:
+        #     if person != self.player:
+        #         enemy = person
+        # for unit in self.game.units:
+        #     if unit.owner == self.player:
+        #         if unit.moves > 0 and unit != self.player.cat:
+        #             self.move_to_target(unit, enemy.cat.tile)
+
         return True
 
     def find_path(self, start, goal):
@@ -131,3 +140,13 @@ class AI(BaseAI):
 
     def distance(self, p0, p1):
         return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
+    def move_to_target(self, unit, target):
+        moves = self.find_path(unit.tile, target)
+        if unit.moves <= len(moves):
+            for x in range(0, unit.moves):
+                unit.move(moves[x])
+            if unit.tile.has_neighbor(target):
+                return True
+            else:
+                return False
