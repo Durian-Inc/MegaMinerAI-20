@@ -433,7 +433,6 @@ class AI(BaseAI):
     def target_close(self, fighter):
         squares = set()
         enemies = set()
-        whatevers = set()
         sorted_enemies = {}
         for x in fighter.tile.get_neighbors():
             squares.add(x)
@@ -444,10 +443,7 @@ class AI(BaseAI):
 
         for i in squares:
             if i.unit and i.unit.owner != self.player:
-                if i.unit.job.title == "soldier":
                     enemies.add(i.unit)
-                else:
-                    whatevers.add(i.unit)
 
         for i in enemies:
             sorted_enemies[self.distance((i.tile.x, i.tile.y),
