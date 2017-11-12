@@ -9,7 +9,8 @@ class AI(BaseAI):
     """ The basic AI functions that are the same between games. """
 
     def get_name(self):
-        """ This is the name you send to the server so your AI will control the player named this string.
+        """ This is the name you send to the server so your AI will control
+            the player named this string.
 
         Returns
             str: The name of your Player.
@@ -18,38 +19,59 @@ class AI(BaseAI):
         return "Durian"
 
     def start(self):
-        """ This is called once the game starts and your AI knows its playerID and game. You can initialize your AI here.
+        """ This is called once the game starts and your AI knows its playerID
+        and game. You can initialize your AI here.
         """
         for x in self.player.structures:
             if x.type == "shelter":
                 self.home = x
+
+        # find which missionary position is closer to start
+        start_loc = (self.player.cat.tile.x, self.player.cat.tile.y)
+        self.m_target = self.game.get_tile_at(0, 7)
+        if(self.distance(start_loc, (self.m_target.x, self.m_target.y)) >
+           self.distance(start_loc, (25, 10))):
+            self.m_target = self.game.get_tile_at(25, 10)
+
     def game_updated(self):
-        """ This is called every time the game's state updates, so if you are tracking anything you can update it here.
+        """ This is called every time the game's state updates, so if you are
+            tracking anything you can update it here.
         """
-        self.foods, self.materials, self.bushes, self.material_structures = [], [], [], []
-        for i in self.game.tiles:
-            if i.food > 0:
-                self.foods.append(i)
-            if i.materials > 0:
-                self.materials.append(i)
-            if i.harvest_rate > 0:
-                self.bushes.append(i)
-            if i.structure is not None and i.structure.owner is not None:
-                self.material_structures.append(i)
+        # set up and refresh lists
+        self.foods, self.materials, self.unowned_humans = [], [], []
+        self.bushes, self.material_structures = [], []
+        for tile in self.game.tiles:
+            if tile.food > 0:
+                self.foods.append(tile)
+            elif tile.materials > 0:
+                self.materials.append(tile)
+            elif tile.harvest_rate > 0:
+                self.bushes.append(tile)
+            elif (tile.structure is not None and
+                  tile.structure.owner is None and
+                  tile.structure.type != "road"):
+                self.material_structures.append(tile)
+        for unit in self.game.units:
+            if unit.job.title == "fresh human" and unit.owner is None:
+                self.unowned_humans.append(unit)
 
     def end(self, won, reason):
-        """ This is called when the game ends, you can clean up your data and dump files here if need be.
+        """ This is called when the game ends, you can clean up your data and
+            dump files here if need be.
 
         Args:
             won (bool): True means you won, False means you lost.
-            reason (str): The human readable string explaining why you won or lost.
+            reason (str): The human readable string explaining why you won or
+            lost.
         """
 
     def run_turn(self):
         """ This is called every time it is this AI.player's turn.
 
         Returns:
-            bool: Represents if you want to end your turn. True means end your turn, False means to keep your turn going and re-call this function.
+            bool: Represents if you want to end your turn. True means end your
+            turn, False means to keep your turn going and re-call this
+            function.
         """
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             # self.base_start()
@@ -85,15 +107,58 @@ class AI(BaseAI):
             if self.move_to_target(s, enemy.cat.tile):
                 s.attack(enemy.cat.tile)
 
+        missionaries = self.get_unit_type(self.player.units, "missionary")
+        # only one missionary
+        if len(missionaries) == 1:
+            m_1 = missionaries[0]  # the one and only
+            if m_1.energy < m_1.job.action_cost:
+                self.move_to_target(m_1, self.player.cat.tile)
+                if m_1.tile.has_neighbor(self.player.cat.tile):
+                    m_1.rest()
+            else:
+                if len(self.unowned_humans) > 0:
+                    target_human = None
+                    for human in self.unowned_humans:
+                        if target_human is None:
+                            target_human = human
+                        if self.distance((m_1.tile.x, m_1.tile.y),
+                                         (human.tile.x, human.tile.y)) < self.distance((m_1.tile.x, m_1.tile.y), (human.tile.x, human.tile.y)):
+                            target_human = human
+
+                    self.move_to_target(m_1, target_human.tile)
+                    if m_1.tile.has_neighbor(target_human.tile):
+                        m_1.convert(target_human.tile)
+                    if m_1.energy < m_1.job.action_cost:
+                        m_1.rest()
+                else:
+                    self.move_to_target(m_1, self.m_target)
+                #sorted_foods[self.distance((g.movement_target.x,
+                #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
+                #print(sorted_foods)
+                pass
+
+        enemy = None
+        for person in self.game.players:
+            if person != self.player:
+                enemy = person
+        for unit in self.game.units:
+            if unit.owner == self.player:
+                if unit.moves > 0 and unit != self.player.cat:
+                    self.move_to_target(unit, enemy.cat.tile)
+
         return True
 
     def find_path(self, start, goal):
-        """A very basic path finding algorithm (Breadth First Search) that when given a starting Tile, will return a valid path to the goal Tile.
+        """ A very basic path finding algorithm (Breadth First Search) that
+            when given a starting Tile, will return a valid path to the goal
+            Tile.
         Args:
             start (Tile): the starting Tile
             goal (Tile): the goal Tile
         Returns:
-            list[Tile]: A list of Tiles representing the path, the the first element being a valid adjacent Tile to the start, and the last element being the goal.
+            list[Tile]: A list of Tiles representing the path, the the first
+            element being a valid adjacent Tile to the start, and the last
+            element being the goal.
         """
 
         if start == goal:
@@ -118,23 +183,31 @@ class AI(BaseAI):
             for neighbor in inspect.get_neighbors():
                 # if we found the goal, we have the path!
                 if neighbor == goal:
-                    # Follow the path backward to the start from the goal and return it.
+                    # Follow the path backward to the start from the goal and
+                    # return it.
                     path = [goal]
 
-                    # Starting at the tile we are currently at, insert them retracing our steps till we get to the starting tile
+                    # Starting at the tile we are currently at, insert them
+                    # retracing our steps till we get to the starting tile
                     while inspect != start:
                         path.insert(0, inspect)
                         inspect = came_from[inspect.id]
                     return path
-                # else we did not find the goal, so enqueue this tile's neighbors to be inspected
+                # else we did not find the goal, so enqueue this tile's
+                # neighbors to be inspected
 
-                # if the tile exists, has not been explored or added to the fringe yet, and it is pathable
-                if neighbor and neighbor.id not in came_from and neighbor.is_pathable():
-                    # add it to the tiles to be explored and add where it came from for path reconstruction.
+                # if the tile exists, has not been explored or added to the
+                # fringe yet, and it is pathable
+                if (neighbor and 
+                   neighbor.id not in came_from and
+                   neighbor.is_pathable()):
+                    # add it to the tiles to be explored and add where it came
+                    # from for path reconstruction.
                     fringe.append(neighbor)
                     came_from[neighbor.id] = inspect
 
-        # if you're here, that means that there was not a path to get to where you want to go.
+        # if you're here, that means that there was not a path to get to where
+        # you want to go.
         #   in that case, we'll just return an empty path.
         return []
 
