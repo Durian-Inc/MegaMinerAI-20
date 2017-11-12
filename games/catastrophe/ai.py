@@ -76,8 +76,8 @@ class AI(BaseAI):
             function.
         """
         if self.game.current_turn == 0 or self.game.current_turn == 1:
-            # self.base_start()
-            self.attack_start()
+            self.base_start()
+            # self.attack_start()
             
         # All turns except first
         # Gathering
