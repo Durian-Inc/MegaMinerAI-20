@@ -100,8 +100,8 @@ class AI(BaseAI):
                 if self.move_to_target(g, self.home):
                     g.drop(self.home, "food", g.food)
             elif g.energy < g.job.action_cost:
-                if self.move_to_target(g, self.home):
-                    g.rest()
+                self.move_to_target(g, self.home)
+                g.rest()
             # elif self.player.food >= self.food_quota:
             #     if self.move_to_target(g, self.home):
             #         g.change_job("builder")
@@ -122,8 +122,8 @@ class AI(BaseAI):
         try:
             if soldiers[0]:
                 if soldiers[0].energy <= 30 and self.home is not None:
-                    if self.move_to_target(soldiers[0], self.home):
-                        soldiers[0].rest()
+                    self.move_to_target(soldiers[0], self.home)
+                    soldiers[0].rest()
             else:
                 # defend
                 if self.in_range(self.player.cat) > 0:
@@ -133,8 +133,8 @@ class AI(BaseAI):
                     self.target_close(soldiers[0])
             if soldiers[1]:
                 if soldiers[1].energy <= 30 and self.home is not None:
-                    if self.move_to_target(soldiers[1], self.home):
-                        soldiers[1].rest()
+                    self.move_to_target(soldiers[1], self.home)
+                    soldiers[1].rest()
             else:
                 # defend
                 if self.in_range(self.player.cat) > 0:
@@ -147,8 +147,8 @@ class AI(BaseAI):
 
         for s in soldiers[2:]:
             if s.energy <= 30 and self.home is not None:
-                if self.move_to_target(s, self.home):
-                    s.rest()
+                self.move_to_target(s, self.home)
+                s.rest()
             else:
                 # defend
                 if self.in_range(self.player.cat) > 0:
@@ -216,8 +216,8 @@ class AI(BaseAI):
                 # check energy
                 if missionary.energy < missionary.job.action_cost:
                     # go to cat and rest
-                    if self.move_to_target(missionary, self.player.cat.tile):
-                        missionary.rest()
+                    self.move_to_target(missionary, self.player.cat.tile)
+                    missionary.rest()
                 else:
                     # we have enough energy, search for humans
                     if len(self.unowned_humans) > 0:
@@ -249,10 +249,10 @@ class AI(BaseAI):
                             # we converted a human but can still move
                             if missionary.energy < missionary.job.action_cost:
                                 # go to the cat
-                                if self.move_to_target(missionary,
-                                                       self.player.cat.tile):
+                                self.move_to_target(missionary,
+                                                    self.player.cat.tile)
                                     # got to the cat, rest
-                                    missionary.rest()
+                                missionary.rest()
                         else:
                             # no human to chase, go to target
                             self.move_to_target(
