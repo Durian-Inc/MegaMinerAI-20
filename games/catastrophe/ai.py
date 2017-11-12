@@ -28,12 +28,17 @@ class AI(BaseAI):
 
         # find which missionary position is closer to start
         start_loc = (self.player.cat.tile.x, self.player.cat.tile.y)
-        self.m_target = self.game.get_tile_at(0, 10)
-        self.m2_target = self.game.get_tile_at(25, 10)
-        if(self.distance(start_loc, (self.m_target.x, self.m_target.y)) >
-           self.distance(start_loc, (25, 10))):
-            self.m_target = self.game.get_tile_at(25, 7)
-            self.m2_target = self.game.get_tile_at(0, 7)
+        x, y, o_x = None, None, None
+        if start_loc[0] <= 7:
+            y = 7
+        else:
+            y = 10
+        if start_loc[1] <= 12:
+            x, o_x = 0, 25
+        else:
+            x, o_x = 25, 0
+        self.m_target = [self.game.get_tile_at(x, y),
+                         self.game.get_tile_at(o_x, y)]
 
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are
@@ -78,7 +83,8 @@ class AI(BaseAI):
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             self.base_start()
             # self.attack_start()
-            
+        
+        builders = self.get_unit_type(self.player.units, "builder")
         # All turns except first
         # Gathering
         
@@ -111,79 +117,113 @@ class AI(BaseAI):
 
         # Missionaries
         missionaries = self.get_unit_type(self.player.units, "missionary")
-        # only one missionary
-        if len(missionaries) == 1:
-            m_1 = missionaries[0]  # the one and only
-            if m_1.energy < m_1.job.action_cost:
-                self.move_to_target(m_1, self.player.cat.tile)
-                if m_1.tile.has_neighbor(self.player.cat.tile):
-                    m_1.rest()
-            else:
-                if len(self.unowned_humans) > 0:
-                    target_human = None
-                    for human in self.unowned_humans:
-                        if target_human is None:
-                            target_human = human
-                        if self.distance((m_1.tile.x, m_1.tile.y),
-                                         (human.tile.x, human.tile.y)) < self.distance((m_1.tile.x, m_1.tile.y), (human.tile.x, human.tile.y)):
-                            target_human = human
 
-                    self.move_to_target(m_1, target_human.tile)
-                    if m_1.tile.has_neighbor(target_human.tile):
-                        m_1.convert(target_human.tile)
-                    if m_1.energy < m_1.job.action_cost:
-                        m_1.rest()
+        # no missionaries, this is bad
+        if len(missionaries) < 1:
+            closest_unit = None
+            # search for closest builder
+            for builder in builders:
+                if closest_unit is None:
+                    closest_unit = builder
+                if self.dist2(closest_unit, self.player.cat) > self.dist2(
+                    builder, self.player.cat
+                ):
+                    closest_unit = builder
+            # we have no builders
+            if closest_unit is None:
+                # search for closest soldier
+                for soldier in soldiers:
+                    if closest_unit is None:
+                        closest_unit = soldier
+                    if self.dist2(closest_unit, self.player.cat) > self.dist2(
+                        soldier, self.player.cat
+                    ):
+                        closest_unit = soldier
+                # we have no soldiers
+                if closest_unit is None:
+                    # find closest unit
+                    for unit in self.player.units:
+                        if closest_unit is None:
+                            closest_unit = unit
+                        if self.dist2(closest_unit,
+                                      self.player.cat) > self.dist2(
+                                          unit, self.player.cat
+                                      ):
+                            closest_unit = unit
+            # move the unit to the cat
+            self.move_to_target(closest_unit, self.player.cat.tile)
+            if closest_unit.tile.has_neighbor(self.player.cat.tile):
+                # get full energy
+                if closest_unit.energy < 100:
+                    closest_unit.rest()
                 else:
-                    self.move_to_target(m_1, self.m_target)
-                #sorted_foods[self.distance((g.movement_target.x,
-                #                            g.movement_target.y), (f.x, f.y))] = (f.x, f.y)
-                #print(sorted_foods)
-                pass
-        elif len(missionaries) > 1:
-            m_1 = missionaries[0]  # first missionary
-            if m_1.energy < m_1.job.action_cost:
-                self.move_to_target(m_1, self.player.cat.tile)
-                if m_1.tile.has_neighbor(self.player.cat.tile):
-                    m_1.rest()
-            else:
-                if len(self.unowned_humans) > 0:
-                    target_human = None
-                    for human in self.unowned_humans:
-                        if target_human is None:
-                            target_human = human
-                        if self.distance((m_1.tile.x, m_1.tile.y),
-                                         (human.tile.x, human.tile.y)) < self.distance((m_1.tile.x, m_1.tile.y), (human.tile.x, human.tile.y)):
-                            target_human = human
-
-                    self.move_to_target(m_1, target_human.tile)
-                    if m_1.tile.has_neighbor(target_human.tile):
-                        m_1.convert(target_human.tile)
-                    if m_1.energy < m_1.job.action_cost:
-                        m_1.rest()
+                    # become missionary
+                    closest_unit.change_job("missionary")
+        else:
+            # we have at least one missionary
+            for missionary in missionaries:
+                other = None  # other missionary; if None, we only have one
+                # find other missionary
+                for m_2 in missionaries:
+                    if m_2 is not missionary:
+                        other = m_2
+                # check energy
+                if missionary.energy < missionary.job.action_cost:
+                    # go to cat and rest
+                    self.move_to_target(missionary, self.player.cat.tile)
+                    if missionary.tile.has_neighbor(self.player.cat.tile):
+                        missionary.rest()
                 else:
-                    self.move_to_target(m_1, self.m_target)
-            m_2 = missionaries[1]  # second missionary
-            if m_2.energy < m_2.job.action_cost:
-                self.move_to_target(m_2, self.player.cat.tile)
-                if m_2.tile.has_neighbor(self.player.cat.tile):
-                    m_2.rest()
-            else:
-                if len(self.unowned_humans) > 0:
-                    target_human = None
-                    for human in self.unowned_humans:
-                        if target_human is None:
-                            target_human = human
-                        if self.distance((m_2.tile.x, m_2.tile.y),
-                                         (human.tile.x, human.tile.y)) < self.distance((m_2.tile.x, m_2.tile.y), (human.tile.x, human.tile.y)):
-                            target_human = human
-
-                    self.move_to_target(m_2, target_human.tile)
-                    if m_2.tile.has_neighbor(target_human.tile):
-                        m_2.convert(target_human.tile)
-                    if m_2.energy < m_2.job.action_cost:
-                        m_2.rest()
-                else:
-                    self.move_to_target(m_2, self.m2_target)
+                    # we have enough energy, search for humans
+                    if len(self.unowned_humans) > 0:
+                        target_human = None  # human to chase
+                        # find closest human not closer to other missionary
+                        for human in self.unowned_humans:
+                            # first human, gets the distance comparing started
+                            if target_human is None:
+                                target_human = human
+                            # see if human is closer than target_human
+                            if self.dist2(missionary,
+                                          human) < self.dist2(missionary,
+                                                              human):
+                                target_human = human
+                            # see if there's a second missionary
+                            if other is not None:
+                                # see if human is closer to other missionary
+                                if self.dist2(missionary,
+                                              human) > self.dist2(other,
+                                                                  human):
+                                    target_human = None
+                        # see if we still have a human to chase
+                        if target_human is not None:
+                            # chase the human
+                            if self.move_to_target(missionary,
+                                                   target_human.tile):
+                                # we have found the human, convert it
+                                missionary.convert(target_human.tile)
+                            # we converted a human but can still move
+                            if missionary.energy < missionary.job.action_cost:
+                                # go to the cat
+                                if self.move_to_target(missionary,
+                                                       self.player.cat.tile):
+                                    # got to the cat, rest
+                                    missionary.rest()
+                        else:
+                            # no human to chase, go to target
+                            self.move_to_target(
+                                missionary,
+                                self.m_target[0]
+                                if missionary is missionaries[0]
+                                else self.m_target[1]
+                            )
+                    else:
+                        # no humans on map, go to target
+                        self.move_to_target(
+                            missionary,
+                            self.m_target[0]
+                            if missionary is missionaries[0]
+                            else self.m_target[1]
+                        )
 
         # New humans
         new_humans = self.get_unit_type(self.player.units, "fresh human")
@@ -280,6 +320,10 @@ class AI(BaseAI):
 
     def distance(self, p0, p1):
         return math.sqrt((p0[0] - p1[0])**2 + (p0[1] - p1[1])**2)
+
+    def dist2(self, obj1, obj2):
+        return self.distance((obj1.tile.x, obj1.tile.y),
+                             (obj2.tile.x, obj2.tile.y))
 
     def move_to_target(self, unit, target):
         moves = self.find_path(unit.tile, target)
