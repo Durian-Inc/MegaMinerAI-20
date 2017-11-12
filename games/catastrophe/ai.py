@@ -2,6 +2,7 @@
 
 from joueur.base_ai import BaseAI
 import math
+import time
 
 
 class AI(BaseAI):
@@ -72,15 +73,33 @@ class AI(BaseAI):
                     else:
                         i.change_job("missionary")
         # All turns except first
+        # Gathering
+        for x in self.player.structures:
+            if x.type == "shelter":
+                home = x
         gatherers = self.get_unit_type(self.player.units, "gatherer")
         sorted_foods = {}
+        count = 0
         for g in gatherers:
+            if g.food:
+                self.move_to_target(g, home.tile)
+                g.drop(home.tile, "food", g.food)
+                continue
             for f in self.bushes:
                 sorted_foods[self.distance((g.tile.x, g.tile.y),
                                            (f.x, f.y))] = f
+<<<<<<< HEAD
             # sorted_foods_keys = sorted(sorted_foods.items())
             # if self.move_to_target(g, sorted_foods[sorted_foods_keys[0]]):
             #    sorted_foods_keys.pop(0)
+=======
+            sorted_foods_keys = sorted(sorted_foods.keys())
+            while sorted_foods[sorted_foods_keys[count]].turns_to_harvest != 0:
+                count += 1
+            if self.move_to_target(g, sorted_foods[sorted_foods_keys[count]]):
+                g.harvest(sorted_foods[sorted_foods_keys[count]])
+            count += 1
+>>>>>>> fc79a72fb124e47c286f6b2e5ef062527c44a604
 
         # enemy = None
         # for person in self.game.players:
@@ -178,10 +197,9 @@ class AI(BaseAI):
 
     def move_to_target(self, unit, target):
         moves = self.find_path(unit.tile, target)
-        if unit.moves <= len(moves):
-            for x in range(0, unit.moves):
-                unit.move(moves[x])
+        num_moves = len(moves) if unit.moves > len(moves) else unit.moves
+        for x in range(0, num_moves):
+            unit.move(moves[x])
             if unit.tile.has_neighbor(target):
                 return True
-            else:
-                return False
+        return False
