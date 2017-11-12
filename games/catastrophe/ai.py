@@ -22,12 +22,16 @@ class AI(BaseAI):
     def game_updated(self):
         """ This is called every time the game's state updates, so if you are tracking anything you can update it here.
         """
-        self.foods, self.materials = [], []
+        self.foods, self.materials, self.bushes, self.materialStructures = [], [], [], []
         for i in self.game.tiles:
             if i.food > 0:
                 self.foods.append(i)
             if i.materials > 0:
                 self.materials.append(i)
+            if i.harvest_rate > 0:
+                self.bushes.append(i)
+            if i.structure is not None and i.structure.owner is not None:
+                self.materialStructures.append(i)
 
     def end(self, won, reason):
         """ This is called when the game ends, you can clean up your data and dump files here if need be.
