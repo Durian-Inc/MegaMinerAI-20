@@ -15,7 +15,7 @@ class AI(BaseAI):
         Returns
             str: The name of your Player.
         """
-        
+
         return "Durian"
 
     def start(self):
@@ -26,7 +26,7 @@ class AI(BaseAI):
 
         for x in self.player.structures:
             if x.type == "shelter":
-                self.home = x
+                self.home = x.tile
 
         # find which missionary position is closer to start
         start_loc = (self.player.cat.tile.x, self.player.cat.tile.y)
@@ -85,6 +85,9 @@ class AI(BaseAI):
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             self.base_start()
             # self.attack_start()
+        
+        if self.player.cat.energy < 100:
+            self.player.cat.rest()
 
         builders = self.get_unit_type(self.player.units, "builder")
         # All turns except first
@@ -94,13 +97,13 @@ class AI(BaseAI):
         count = 0
         for g in gatherers:
             if g.food:
-                if self.move_to_target(g, self.home.tile):
-                    g.drop(self.home.tile, "food", g.food)
+                if self.move_to_target(g, self.home):
+                    g.drop(self.home, "food", g.food)
             elif g.energy < g.job.action_cost:
-                if self.move_to_target(g, self.home.tile):
+                if self.move_to_target(g, self.home):
                     g.rest()
             # elif self.player.food >= self.food_quota:
-            #     if self.move_to_target(g, self.home.tile):
+            #     if self.move_to_target(g, self.home):
             #         g.change_job("builder")
             else:
                 for f in self.bushes:
@@ -122,7 +125,7 @@ class AI(BaseAI):
                     s.log("I'm moveing")
                     s.attack(enemy.cat.tile)
             else:
-                if self.move_to_target(s, self.home.tile):
+                if self.move_to_target(s, self.home):
                     s.rest()
 
         # Missionaries
