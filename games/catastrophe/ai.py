@@ -85,7 +85,7 @@ class AI(BaseAI):
         if self.game.current_turn == 0 or self.game.current_turn == 1:
             self.base_start(len(self.bushes))
             # self.attack_start()
-        
+
         if self.player.cat.energy < 100:
             self.player.cat.rest()
 
@@ -119,7 +119,33 @@ class AI(BaseAI):
         # Soldiers
         enemy = self.player.opponent
         soldiers = self.get_unit_type(self.player.units, "soldier")
-        for s in soldiers:
+        try:
+            if soldiers[0]:
+                if soldiers[0].energy <= 30 and self.home is not None:
+                    if self.move_to_target(soldiers[0], self.home):
+                        soldiers[0].rest()
+            else:
+                # defend
+                if self.in_range(self.player.cat) > 0:
+                    if self.move_to_target(soldiers[0], self.player.cat.tile):
+                        self.target_close(soldiers[0])
+                elif self.in_range(soldiers[0]) > 0 and self.dist2(soldiers[0], enemy.cat) >= 3:
+                    self.target_close(soldiers[0])
+            if soldiers[1]:
+                if soldiers[1].energy <= 30 and self.home is not None:
+                    if self.move_to_target(soldiers[1], self.home):
+                        soldiers[1].rest()
+            else:
+                # defend
+                if self.in_range(self.player.cat) > 0:
+                    if self.move_to_target(soldiers[1], self.player.cat.tile):
+                        self.target_close(soldiers[1])
+                elif self.in_range(soldiers[1]) > 0 and self.dist2(soldiers[1], enemy.cat) >= 3:
+                    self.target_close(soldiers[1])
+        except IndexError:
+            pass
+
+        for s in soldiers[2:]:
             if s.energy <= 30 and self.home is not None:
                 if self.move_to_target(s, self.home):
                     s.rest()
@@ -337,7 +363,7 @@ class AI(BaseAI):
         return self.distance((obj1.tile.x, obj1.tile.y),
                              (obj2.tile.x, obj2.tile.y))
 
-    def move_to_target(self, unit, target):
+    def move_to_area(self, unit, target):
         moves = self.find_path(unit.tile, target)
         num_moves = len(moves) if unit.moves > len(moves) else unit.moves
         for x in range(0, num_moves):
@@ -346,6 +372,33 @@ class AI(BaseAI):
             if unit.tile.has_neighbor(target):
                 return True
         return False
+
+
+
+
+    def path_to_area(self, unit, area):
+        path = self.find_path(unit.tile, area)
+        if path == []:
+            for i in area.get_neighbors():
+                path = self.path_to_area(unit, i)
+                if path != []:
+                    return path
+        else:
+            return path
+
+    def move_to_target(self, unit, target):
+        moves = self.path_to_area(unit, target)
+        num_moves = len(moves) if unit.moves > len(moves) else unit.moves
+        for x in range(0, num_moves):
+            if moves[x] in unit.tile.get_neighbors() and not moves[x].unit:
+                unit.move(moves[x])
+            if unit.tile.has_neighbor(target):
+                return True
+        return False
+
+
+
+
 
     def base_start(self, num_bushes):
         gather_quota = 1
